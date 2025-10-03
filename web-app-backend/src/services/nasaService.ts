@@ -17,7 +17,7 @@ export interface OSDRSearchResult {
     studies: OSDRStudy[];
 }
 
-const OSDR_BASE_URL = "https://osdr.nasa.gov/osdr/data/osd";
+const OSDR_BASE_URL = "https://osdr.nasa.gov/osdr/data/search/";
 const API_TIMEOUT = 10000; // 10 seconds
 
 /**
@@ -27,17 +27,14 @@ const API_TIMEOUT = 10000; // 10 seconds
  * @param limit - Maximum number of results to return (default: 10)
  * @returns Promise with search results
  */
-export async function searchOSDR(
-    query: string,
-    limit = 10
-): Promise<OSDRSearchResult> {
+export async function searchOSDR(query: string): Promise<OSDRSearchResult> {
     try {
         console.log(`🔍 Searching OSDR for: "${query}"`);
 
-        const response = await axios.get(`${OSDR_BASE_URL}/studies`, {
+        const response = await axios.get(`${OSDR_BASE_URL}`, {
             params: {
                 term: query,
-                size: limit,
+                size: 5,
                 from: 0,
             },
             timeout: API_TIMEOUT,

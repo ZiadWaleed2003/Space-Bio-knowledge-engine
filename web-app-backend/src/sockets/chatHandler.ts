@@ -1,4 +1,5 @@
 import { getLLMResponse, visAidInjector } from "@src/services/chatService";
+import { generateSpeech } from "@src/services/voiceService";
 import { Server, Socket } from "socket.io";
 interface ChatMessage {
     message: string;
@@ -52,7 +53,6 @@ async function handleChatMessage(
             });
             return;
         }
-
         console.log(`Message from ${socket.id}: "${message}"`);
 
         // Send thinking status
@@ -61,10 +61,11 @@ async function handleChatMessage(
             message: "Searching NASA databases...",
         });
 
-        const response = (await getLLMResponse(sessionId, message)).text;
+        // const response = (await getLLMResponse(sessionId, message)).text;
+        const response = { message: "s" };
         socket.emit("response", {
             message: sessionPaper
-                ? visAidInjector(sessionPaper, response)
+                ? visAidInjector(sessionPaper, response.message)
                 : response,
             timestamp: new Date().toISOString(),
         });

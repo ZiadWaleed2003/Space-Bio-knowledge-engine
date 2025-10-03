@@ -5,3 +5,4 @@ temp/
 config.js
 
 .env
+.rest
