@@ -52,11 +52,3 @@ def get_query_parser():
     except Exception as e:
         print(f"ERROR initializing LLM: {str(e)}")
         raise
-
-
-@lru_cache(maxsize=None)
-def get_embedding_model():
-
-    model = "nvidia/llama-3.2-nv-embedqa-1b-v2"
-
-    return model
