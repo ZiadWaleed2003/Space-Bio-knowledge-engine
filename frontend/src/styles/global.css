@@ -1,0 +1,45 @@
+@import 'tailwindcss';
+
+* {
+  line-height: 1rem;
+}
+
+/* Scrollbar container */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+/* Scrollbar track */
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 16px;
+}
+
+/* Scrollbar thumb */
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--color-primary), var(--color-primary-dark));
+  border-radius: 16px;
+}
+
+/* Hover effect */
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--color-primary), var(--color-primary-dark));
+}
+
+@theme {
+  --color-primary: var(--c-primary);
+  --color-primary-dark: var(--c-primary-dark);
+  --color-secondary: var(--c-secondary);
+  --color-background: var(--c-background);
+  --color-background-dark: var(--c-background-dark);
+  --color-text: var(--c-text);
+  --color-card: var(--c-card);
+  --color-border: var(--c-border);
+  --color-input: var(--c-input);
+  --color-danger: var(--c-danger);
+  --color-danger-content: var(--c-danger-content);
+  --color-success: var(--c-success);
+  --color-warning: var(--c-warning);
+  --color-info: var(--c-info);
+}
