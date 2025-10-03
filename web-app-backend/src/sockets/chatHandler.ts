@@ -1,16 +1,20 @@
+import { visAidInjector } from "@src/services/chatService";
 import { Server, Socket } from "socket.io";
 
 interface ChatMessage {
     message: string;
     sessionId?: string;
+    sessionPaper?: string;
 }
 
 /**
  * Setup all socket event handlers
  */
 export const setupSocketHandlers = (io: Server): void => {
-    io.on("connection", (socket: Socket) => {
-        console.log(`✅ Client connected: ${socket.id}`);
+    const clientNamespace = io.of("/client");
+
+    clientNamespace.on("connection", (socket: Socket) => {
+        console.log(`Client connected: ${socket.id}`);
 
         socket.emit("chat:welcome", {
             message: "Welcome to NASA Space Biology Knowledge Engine!",
@@ -31,7 +35,7 @@ export const setupSocketHandlers = (io: Server): void => {
         });
 
         socket.on("error", (error: Error) => {
-            console.error(`❌ Socket error for ${socket.id}:`, error);
+            console.error(`Socket error for ${socket.id}:`, error);
         });
     });
 };
@@ -41,7 +45,7 @@ async function handleChatMessage(
     data: ChatMessage
 ): Promise<void> {
     try {
-        const { message, sessionId } = data;
+        const { message, sessionId, sessionPaper } = data;
 
         // Validate message
         if (!message || message.trim().length === 0) {
@@ -51,7 +55,7 @@ async function handleChatMessage(
             return;
         }
 
-        console.log(`📨 Message from ${socket.id}: "${message}"`);
+        console.log(`Message from ${socket.id}: "${message}"`);
 
         // Send thinking status
         socket.emit("chat:thinking", {
@@ -61,14 +65,18 @@ async function handleChatMessage(
 
         const response = { text: "", sources: [] };
 
+        // TODO: Process message and get response
+
         // Send response
         socket.emit("chat:response", {
-            message: response.text,
+            message: sessionPaper
+                ? visAidInjector(sessionPaper, response.text)
+                : response.text,
             sources: response.sources,
             timestamp: new Date().toISOString(),
         });
 
-        console.log(`✉️  Response sent to ${socket.id}`);
+        console.log(`Response sent to ${socket.id}`);
     } catch (error) {
         console.error("Error handling chat message:", error);
         socket.emit("chat:error", {
@@ -77,21 +85,19 @@ async function handleChatMessage(
     }
 }
 
-/**
- * Handle clear chat request
- */
 function handleClearChat(socket: Socket): void {
-    console.log(`🗑️  Chat cleared for ${socket.id}`);
+    console.log(`Chat cleared for ${socket.id}`);
+
+    // TODO: Clear any session data
+
     socket.emit("chat:cleared", {
         message: "Chat history cleared",
         timestamp: new Date().toISOString(),
     });
 }
 
-/**
- * Handle client disconnect
- */
 function handleDisconnect(socket: Socket, reason: string): void {
-    console.log(`❌ Client disconnected: ${socket.id}, Reason: ${reason}`);
-    // Clean up any session data here
+    console.log(`Client disconnected: ${socket.id}, Reason: ${reason}`);
+
+    // TODO: Clean up any session data here
 }
