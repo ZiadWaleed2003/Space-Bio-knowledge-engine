@@ -3,11 +3,14 @@ import { Button, Input } from 'antd'
 import { SendOutlined } from '@ant-design/icons'
 import { useChatBot } from '@/services/hooks/useChatbot'
 
+import MicButton from './MicButton'
+
 function ChatBotComponent() {
   const { messages, input, setInput, handleSend, messagesEndRef } = useChatBot()
+
   return (
     <div
-      className="w-full shadow-2xl  rounded-3xl bg-[#252537] border border-gray-700 overflow-hidden flex flex-col"
+      className="w-full shadow-2xl rounded-3xl bg-[#252537] border border-gray-700 overflow-hidden flex flex-col"
       style={{ minHeight: 500 }}
     >
       {/* Messages */}
@@ -27,12 +30,15 @@ function ChatBotComponent() {
       </div>
 
       {/* Input */}
-      <div className="p-4 flex items-center border-t border-gray-700 bg-[#1e1e2e] rounded-b-3xl">
+      <div className="p-4 flex items-center border-t border-gray-700 bg-[#1e1e2e] rounded-b-3xl space-x-2">
+        <MicButton setInput={setInput} />
         <Input
           type="text"
-          className="flex-1 border border-gray-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-700 transition rounded-xl px-4 py-3 mr-3 text-gray-200 bg-[#2a2a3d] shadow-sm outline-none"
+          className="flex-1 border border-gray-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-700 transition rounded-xl px-4 py-3 text-gray-200 bg-[#2a2a3d] shadow-sm outline-none"
           placeholder="Type your message..."
           value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
           suffix={
             <Button
               onClick={handleSend}
@@ -42,8 +48,6 @@ function ChatBotComponent() {
               <SendOutlined style={{ fontSize: 18 }} />
             </Button>
           }
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
         />
       </div>
     </div>

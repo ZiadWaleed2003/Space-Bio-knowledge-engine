@@ -14,7 +14,6 @@ const StarLayer = ({
   size = 1,
   duration = 50,
   starColor = '#fff',
-  className,
 }: StarLayerProps) => {
   const [boxShadow, setBoxShadow] = useState('')
 
@@ -63,7 +62,6 @@ interface StarsBackgroundProps {
 
 export function StarsBackground({
   children,
-  className,
   factor = 0.05,
   speed = 50,
 }: StarsBackgroundProps) {
