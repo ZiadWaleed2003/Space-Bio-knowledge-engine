@@ -13,9 +13,17 @@ const client = new Groq({
     apiKey: key,
 });
 
-export async function generateSpeech(sessionId: string, text: string) {
+export async function generateSpeech(
+    sessionId: string,
+    timestamp: string,
+    text: string
+) {
     try {
-        const speechFile = path.resolve(`../../temp/${sessionId}/.mp3`);
+        const dir = path.join(process.cwd(), `temp/${sessionId}/`);
+        const speechFile = path.join(dir + `${timestamp}.mp3`);
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir);
+        }
         const mp3 = await client.audio.speech.create({
             model: "playai-tts",
             voice: "Aaliyah-PlayAI",
@@ -24,7 +32,7 @@ export async function generateSpeech(sessionId: string, text: string) {
         });
         const buffer = Buffer.from(await mp3.arrayBuffer());
         await fs.promises.writeFile(speechFile, buffer).then(() => {
-            return speechFile;
+            return `${sessionId}/${timestamp}.mp3`;
         });
         console.log("Speech saved as speech.mp3");
     } catch (error) {

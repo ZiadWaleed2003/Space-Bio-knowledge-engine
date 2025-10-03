@@ -5,7 +5,7 @@ import fs from "fs";
 
 const router = Router();
 
-router.get("/visuals/:paperName/:anchor", async (req, res) => {
+router.get("/api/visuals/:paperName/:anchor", async (req, res) => {
     try {
         const { paperName, anchor } = req.params;
         const { type } = req.query; // expects ?type=figures or ?type=tables
@@ -36,7 +36,9 @@ router.get("/visuals/:paperName/:anchor", async (req, res) => {
     }
 });
 
-router.get("/datasets", async (req, res) => {
+router.get("/api/graph", async (req, res) => {});
+
+router.get("/api/datasets", async (req, res) => {
     try {
         // TODO: Implement dataset listing from NASA APIs
         res.json({
