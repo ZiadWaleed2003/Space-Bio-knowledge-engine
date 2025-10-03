@@ -13,6 +13,12 @@ export interface Source {
     snippet?: string;
 }
 
+export interface VisualAid {
+    type: "fig" | "table";
+    anchor: string;
+    path: string;
+}
+
 export interface ChatSession {
     id: string;
     messages: Message[];
