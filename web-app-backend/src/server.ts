@@ -16,6 +16,10 @@ const io = new Server(httpServer, {
         origin: process.env.CLIENT_URL ?? "http://localhost:5173",
         methods: ["GET", "POST"],
     },
+    connectionStateRecovery: {
+        maxDisconnectionDuration: 60 * 1000,
+        skipMiddlewares: true,
+    },
 });
 
 // Middleware

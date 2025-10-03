@@ -1,11 +1,7 @@
-import * as Moon from "mongoose";
+import { Socket } from "socket.io";
+import axios from "axios";
 
-const visualAidSchema = new Moon.Schema({
-    type: String,
-    anchor: String,
-    path: String,
-});
-const viusalAidModel = Moon.model("visualAid", visualAidSchema);
+const llmUrl = process.env.LLM_URL;
 
 export const visAidInjector = (paper: string, msgText: string) => {
     const match = /\[\[\*([a-zA-Z]+)-([0-9]+)\]\]/.exec(msgText);
@@ -28,3 +24,14 @@ export const visAidInjector = (paper: string, msgText: string) => {
     const path = `${paper}/${folder}/${type}-${id}.png`;
     return path;
 };
+
+export async function getLLMResponse(
+    sessionId: string,
+    message: string
+): Promise<{ text: string }> {
+    const response = axios.post(llmUrl!, {
+        message: message,
+        session_id: sessionId,
+    });
+    return (await response).data.response;
+}
