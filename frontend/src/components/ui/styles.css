@@ -1,0 +1,5 @@
+.search-semantic .ant-input-outlined:hover {
+    background-color: transparent;
+    border-color: var(--color-gray-500);
+    transition-duration: 300ms;
+}
