@@ -2,7 +2,7 @@ const { io } = require("socket.io-client");
 const readline = require("readline");
 
 // Configuration
-const SERVER_URL = "http://localhost:3000";
+const SERVER_URL = "http://localhost:3000/client";
 
 // Create readline interface for user input
 const rl = readline.createInterface({
@@ -62,15 +62,15 @@ socket.on("connect_error", (error) => {
 });
 
 // Chat events
-socket.on("chat:welcome", (data) => {
+socket.on("welcome", (data) => {
     console.log(`${colors.magenta}🤖 Bot: ${data.message}${colors.reset}\n`);
 });
 
-socket.on("chat:thinking", (data) => {
+socket.on("thinking", (data) => {
     console.log(`${colors.yellow}⏳ ${data.message}${colors.reset}`);
 });
 
-socket.on("chat:response", (data) => {
+socket.on("response", (data) => {
     console.log(`\n${colors.magenta}🤖 Bot:${colors.reset} ${data.message}\n`);
 
     if (data.sources && data.sources.length > 0) {
@@ -88,12 +88,12 @@ socket.on("chat:response", (data) => {
     promptUser();
 });
 
-socket.on("chat:error", (data) => {
+socket.on("error", (data) => {
     console.log(`${colors.red}❌ Error: ${data.error}${colors.reset}\n`);
     promptUser();
 });
 
-socket.on("chat:cleared", (data) => {
+socket.on("cleared", (data) => {
     console.log(`${colors.green}✓ ${data.message}${colors.reset}\n`);
     promptUser();
 });
@@ -119,7 +119,7 @@ function promptUser() {
             }
 
             if (message.toLowerCase() === "/clear") {
-                socket.emit("chat:clear");
+                socket.emit("clear");
                 return;
             }
 
@@ -130,7 +130,7 @@ function promptUser() {
             }
 
             // Send message to server
-            socket.emit("chat:message", {
+            socket.emit("message", {
                 message: message,
                 sessionId: socket.id,
             });
