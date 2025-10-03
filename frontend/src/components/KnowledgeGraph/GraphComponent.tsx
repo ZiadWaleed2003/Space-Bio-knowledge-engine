@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { DataSet, Network } from 'vis-network/standalone'
 import type { Node, Edge } from 'vis-network'
 import { useNavigate } from 'react-router'
+import { StarsBackground } from '../ui/stars-background'
 interface CustomNode extends Node {
   originalColor?: string
 }
@@ -202,11 +203,11 @@ function GraphComponent() {
   }, [activeNodeId, navigate])
 
   return (
-    <div
-      ref={containerRef}
-      style={{ width: '100%', height: '100%' }}
-      className="bg-[#1e1e2e]"
-    />
+    <div className="relative h-screen w-screen">
+      <StarsBackground className="absolute inset-0 z-0" />
+
+      <div ref={containerRef} className="absolute inset-0 z-10" />
+    </div>
   )
 }
 

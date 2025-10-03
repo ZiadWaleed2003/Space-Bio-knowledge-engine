@@ -43,3 +43,34 @@
   --color-warning: var(--c-warning);
   --color-info: var(--c-info);
 }
+
+
+.bg-galaxy {
+  background-image: radial-gradient(at bottom, #1a1a1a 0, #000 100%);
+
+}
+
+/* .stars {
+  background: transparent url('https://www.transparenttextures.com/patterns/stardust.png') repeat;
+  animation: moveStars 100s linear infinite;
+} */
+.stars {
+  background: #000;
+  background-image:
+    radial-gradient(white 1px, transparent 1px),
+    radial-gradient(white 1.5px, transparent 1.5px),
+    radial-gradient(white 2px, transparent 2px);
+  background-size: 3px 3px, 6px 6px, 9px 9px;
+  background-position: 0 0, 50px 100px, 100px 200px;
+  animation: moveStars 300s linear infinite;
+}
+
+@keyframes moveStars {
+  from {
+    background-position: 0 0, 0 0, 0 0;
+  }
+
+  to {
+    background-position: 1000px 500px, -500px 1000px, 500px -1000px;
+  }
+}
