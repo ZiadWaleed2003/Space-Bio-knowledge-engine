@@ -3,12 +3,13 @@ import fs from "fs";
 // import { OpenAI } from "openai";
 import { Groq } from "groq-sdk";
 import * as dotenv from "dotenv";
-import { env } from "process";
 import path from "path";
 
-dotenv.config();
+// dotenv.config({ path: "../../.env" });
 
-const key = env.GROQ_API_KEY;
+console.log(process.env);
+const key = process.env.GROQ_API_KEY;
+
 const client = new Groq({
     apiKey: key,
 });

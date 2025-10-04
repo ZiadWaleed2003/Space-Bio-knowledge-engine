@@ -1,5 +1,5 @@
-import { getLLMResponse, visAidInjector } from "@src/services/chatService";
-import { generateSpeech } from "@src/services/voiceService";
+import { getLLMResponse, visAidInjector } from "../services/chatService";
+import { generateSpeech } from "../services/voiceService";
 import { Server, Socket } from "socket.io";
 import { rm } from "fs/promises";
 import path from "path";
@@ -8,7 +8,6 @@ import { randomUUID } from "crypto";
 
 interface ChatMessage {
     message: string;
-    sessionId: string;
     sessionPaper: string;
 }
 
@@ -42,7 +41,8 @@ export const setupSocketHandlers = (io: Server): void => {
             console.log(`Chatbot slot assigned to ${socket.id}`);
 
             socket.emit("welcome", {
-                message: "Welcome to NASA Space Biology Knowledge Engine!",
+                message:
+                    "Welcome to NASA Space Biology Knowledge Engine! Introduce yourself and your role within your org so I better tailor the info for your use case.",
                 sessionId: socket.id,
                 timestamp: new Date().toISOString(),
             });
@@ -51,9 +51,9 @@ export const setupSocketHandlers = (io: Server): void => {
                 await handleChatMessage(socket, data);
             });
 
-            socket.on("clear", () => {
-                handleClearChat(socket);
-            });
+            // socket.on("clear", () => {
+            //     handleClearChat(socket);
+            // });
 
             socket.on("disconnect", (reason: string) => {
                 handleDisconnect(socket, reason);
@@ -71,7 +71,7 @@ async function handleChatMessage(
     data: ChatMessage
 ): Promise<void> {
     try {
-        const { message, sessionId, sessionPaper } = data;
+        const { message, sessionPaper } = data;
 
         if (!activeChatUsers.has(socket.id)) {
             socket.emit("chatbot_unavailable", {
@@ -110,7 +110,7 @@ async function handleChatMessage(
         const response = { message: "s" };
 
         const ttsPath = await generateSpeech(
-            sessionId,
+            socket.id,
             Date.now().toString(),
             response.message
         );
@@ -121,6 +121,7 @@ async function handleChatMessage(
                 : response.message,
             timestamp: new Date().toISOString(),
             ttsPath: ttsPath,
+            containsImages: true,
         });
 
         console.log(`Response sent to ${socket.id}`);

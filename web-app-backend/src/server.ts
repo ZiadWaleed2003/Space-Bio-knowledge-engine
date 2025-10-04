@@ -13,7 +13,6 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        //TODO: replace with front end irl
         origin: process.env.CLIENT_URL ?? "http://localhost:5173",
         methods: ["GET", "POST"],
     },
