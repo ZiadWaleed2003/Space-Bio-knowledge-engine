@@ -1,4 +1,5 @@
 import dayjs from './../../../node_modules/dayjs/esm/index'
+import AnimatedText from './AnimatedText'
 
 interface IMessage {
   from: 'user' | 'bot'
@@ -15,7 +16,11 @@ function Message({ msg, index }: { msg: IMessage; index: number }) {
           msg.from === 'user' ? 'bg-gray-200 justify-self-end' : 'bg-gray-300'
         }`}
       >
-        <div>{msg.text}</div>
+        {msg.from === 'user' ? (
+          <div>{msg.text}</div>
+        ) : (
+          <AnimatedText msg={msg.text} />
+        )}
         <div className="text-xs text-gray-600 mt-2">
           {msg.from} • {dayjs(msg.timestamp).format('HH:mm')}
         </div>
