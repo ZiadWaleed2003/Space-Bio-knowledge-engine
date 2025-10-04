@@ -1,0 +1,5 @@
+AI/.env
+AI/weaviate-data
+AI/src/data
+.vscode/
+__pycache__/
