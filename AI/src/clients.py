@@ -15,7 +15,7 @@ def get_main_llm() -> ChatNVIDIA :
             model_provider="langchain-nvidia-ai-endpoints",
             base_url = "https://integrate.api.nvidia.com/v1",
             temperature = 0,
-            nvidia_api_key = CONFIG['NVIDIA_API_KEY'],
+            nvidia_api_key = CONFIG['NVIDIA_APIKEY'],
     )
 
     return model
