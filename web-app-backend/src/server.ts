@@ -13,7 +13,6 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        //TODO: replace with front end irl
         origin: process.env.CLIENT_URL ?? "http://localhost:5173",
         methods: ["GET", "POST"],
     },
@@ -25,6 +24,7 @@ const io = new Server(httpServer, {
 
 // Middleware
 app.use("/temp", express.static(path.join(process.cwd(), "temp")));
+app.use("/static", express.static(path.join(process.cwd(), "static")));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

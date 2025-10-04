@@ -1,5 +1,7 @@
 import { Socket } from "socket.io";
 import axios from "axios";
+import Queue from "yocto-queue";
+import QuickLRU from "quick-lru";
 
 const llmUrl = process.env.LLM_URL;
 
@@ -27,11 +29,22 @@ export const visAidInjector = (paper: string, msgText: string) => {
 
 export async function getLLMResponse(
     sessionId: string,
-    message: string
-): Promise<{ text: string }> {
-    const response = axios.post(llmUrl!, {
-        message: message,
-        session_id: sessionId,
-    });
-    return (await response).data.response;
+    message: string,
+    achtiveChatUser: { cachedMsgs: QuickLRU<any, string>; persona?: string }
+) {
+    if (achtiveChatUser.persona) {
+        const response = axios.post(llmUrl!, {
+            message: message,
+            session_id: sessionId,
+            persona: achtiveChatUser.persona,
+        });
+        return (await response).data.response;
+    } else {
+        const response = axios.post(llmUrl!, {
+            message: message,
+            session_id: sessionId,
+            cached_messages: Array.from(achtiveChatUser.cachedMsgs.values()),
+        });
+        return (await response).data;
+    }
 }
