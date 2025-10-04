@@ -105,20 +105,22 @@ async function handleChatMessage(
             message: "Searching NASA databases...",
         });
 
-        // TODO: Replace with real LLM call
-        // const response = (await getLLMResponse(sessionId, message, activeChatUsers.get(socket.id))).text;
-        const response = { message: "s" };
+        const response = (
+            await getLLMResponse(
+                socket.id,
+                message,
+                activeChatUsers.get(socket.id)!
+            )
+        ).text;
 
         const ttsPath = await generateSpeech(
             socket.id,
             Date.now().toString(),
-            response.message
+            response.responseText
         );
 
         socket.emit("response", {
-            message: sessionPaper
-                ? visAidInjector(sessionPaper, response.message)
-                : response.message,
+            message: response.responseText,
             timestamp: new Date().toISOString(),
             ttsPath: ttsPath,
             containsImages: true,

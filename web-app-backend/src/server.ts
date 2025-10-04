@@ -24,6 +24,7 @@ const io = new Server(httpServer, {
 
 // Middleware
 app.use("/temp", express.static(path.join(process.cwd(), "temp")));
+app.use("/static", express.static(path.join(process.cwd(), "static")));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
