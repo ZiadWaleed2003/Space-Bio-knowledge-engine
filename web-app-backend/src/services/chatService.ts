@@ -30,8 +30,8 @@ export const visAidInjector = (paper: string, msgText: string) => {
 export async function getLLMResponse(
     sessionId: string,
     message: string,
-    achtiveChatUser: { cache: QuickLRU<any, string>; persona?: string }
-): Promise<{ text: string }> {
+    achtiveChatUser: { cachedMsgs: QuickLRU<any, string>; persona?: string }
+) {
     if (achtiveChatUser.persona) {
         const response = axios.post(llmUrl!, {
             message: message,
@@ -43,8 +43,8 @@ export async function getLLMResponse(
         const response = axios.post(llmUrl!, {
             message: message,
             session_id: sessionId,
-            cached_messages: Array.from(achtiveChatUser.cache.values()),
+            cached_messages: Array.from(achtiveChatUser.cachedMsgs.values()),
         });
-        return (await response).data.response;
+        return (await response).data;
     }
 }
