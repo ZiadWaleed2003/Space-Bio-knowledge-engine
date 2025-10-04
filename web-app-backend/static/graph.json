@@ -1,0 +1,129 @@
+{
+    "nodes": [
+        {
+            "title": "Genomic Instability in Human Lymphocytes Exposed to Simulated Galactic Cosmic Rays",
+            "summary": "This study investigates the long-term effects of simulated GCR exposure on DNA double-strand breaks and chromosomal aberrations in human peripheral blood lymphocytes, aiming to quantify risks for deep-space missions.",
+            "subtag": "Radiation Biology & DNA Damage"
+        },
+        {
+            "title": "Novel Resistive Exercise Protocols to Mitigate Bone Loss in Microgravity",
+            "summary": "Evaluation of a high-intensity, low-volume resistive exercise regimen as a countermeasure against spaceflight-induced osteopenia in a rodent model.",
+            "subtag": "Musculoskeletal & Bone Biology"
+        },
+        {
+            "title": "The Role of Auxin Transport in Arabidopsis Thaliana Root Skewing Under Simulated Microgravity",
+            "summary": "Investigating the molecular pathways governing root growth directionality by analyzing auxin transporter gene expression in Arabidopsis seedlings on the International Space Station.",
+            "subtag": "Gravitropism & Mechanical Responses"
+        },
+        {
+            "title": "Characterization of Fungal Communities on ISS Interior Surfaces",
+            "summary": "A metagenomic analysis of fungal species isolated from various locations within the ISS, assessing potential risks to crew health and hardware integrity.",
+            "subtag": "ISS Microbiome & Environmental Microbiology"
+        },
+        {
+            "title": "Cognitive Performance and Neuroplasticity During Long-Duration Spaceflight",
+            "summary": "Utilizing fMRI and behavioral assessments to track changes in brain structure and function, particularly in areas related to spatial navigation and executive function, in astronauts aboard the ISS.",
+            "subtag": "Nervous System & Neurobiology"
+        },
+        {
+            "title": "Muscle Atrophy Mechanisms in Drosophila melanogaster During Spaceflight",
+            "summary": "Gene expression analysis of flight muscles in fruit flies flown on the ISS to identify key signaling pathways involved in microgravity-induced muscle degradation.",
+            "subtag": "Invertebrate Models (Drosophila, C. elegans)"
+        },
+        {
+            "title": "Development of a Closed-Loop Algae-Based Bioregenerative Life Support System",
+            "summary": "Designing and testing a photobioreactor for efficient oxygen production, carbon dioxide removal, and water purification using Chlorella vulgaris for future deep-space habitats.",
+            "subtag": "Space Hardware & Life Support Systems"
+        },
+        {
+            "title": "Fluid Shifts and Ocular Health: Investigating Spaceflight-Associated Neuro-ocular Syndrome (SANS)",
+            "summary": "An examination of the cephalad fluid shift's impact on intraocular pressure, optic nerve sheath diameter, and retinal morphology in astronauts.",
+            "subtag": "Cardiovascular & Circulatory Systems"
+        },
+        {
+            "title": "Survival and Metabolic Activity of Tardigrades Exposed to Mars-like UV Radiation and Atmospheric Conditions",
+            "summary": "This experiment tests the resilience of various tardigrade species in a simulated Martian environment, assessing their potential as indicators for extraterrestrial habitability.",
+            "subtag": "Extremophile Biology"
+        },
+        {
+            "title": "Lignin and Cellulose Deposition in Wheat Stems Grown in Microgravity",
+            "summary": "Quantifying changes in cell wall composition and structural integrity of Triticum aestivum grown on the ISS to understand the impact of gravity on plant biomechanics.",
+            "subtag": "Plant Development & Growth Regulation"
+        },
+        {
+            "title": "Pharmacological Intervention to Mitigate Radiation-Induced Oxidative Stress",
+            "summary": "Pre-clinical trial of a novel antioxidant cocktail designed to protect cellular structures from damage caused by space radiation exposure.",
+            "subtag": "Countermeasure Development"
+        },
+        {
+            "title": "Immune System Dysregulation in Mice After a 30-Day Spaceflight Mission",
+            "summary": "Analysis of T-cell activation and cytokine profiles in splenic tissues from mice housed in the Rodent Research Habitat on the ISS.",
+            "subtag": "Rodent Studies (Mice/Rats)"
+        },
+        {
+            "title": "Enhanced Biofilm Formation by Pseudomonas aeruginosa in Simulated Microgravity",
+            "summary": "Investigating the structural and genetic changes in P. aeruginosa biofilms grown under low-shear modeled microgravity conditions, focusing on antibiotic resistance.",
+            "subtag": "Biofilm Formation & Resistance"
+        },
+        {
+            "title": "Insulin Resistance and Glucose Metabolism in Astronauts Post-Flight",
+            "summary": "A longitudinal study tracking markers of insulin resistance and changes in metabolic hormones in crew members before, during, and after long-duration missions.",
+            "subtag": "Metabolic & Endocrine Systems"
+        },
+        {
+            "title": "Machine Learning Models for Predicting Space Radiation Health Risks",
+            "summary": "Development of a predictive algorithm using integrated omics data and flight telemetry to provide personalized health risk assessments for astronauts.",
+            "subtag": "Data Analysis & Computational Methods"
+        },
+        {
+            "title": "Vestibular System Development in Zebrafish (Danio rerio) in Microgravity",
+            "summary": "Observing the formation and function of otoliths in zebrafish larvae developing in space to understand gravity's role in vestibular sensory organ maturation.",
+            "subtag": "Aquatic & Marine Systems"
+        },
+        {
+            "title": "Chlorophyll Fluorescence and Photosynthetic Efficiency of Dwarf Tomatoes in the VEGGIE Growth Chamber",
+            "summary": "Monitoring the photosynthetic performance and biomass production of Solanum lycopersicum grown on the ISS under different light spectra.",
+            "subtag": "Photosynthesis & Energy Metabolism"
+        },
+        {
+            "title": "Latent Virus Reactivation in Astronauts During Long-Duration Missions",
+            "summary": "Analysis of saliva and blood samples for the reactivation of latent herpesviruses, such as Epstein-Barr virus (EBV) and Varicella-zoster virus (VZV), as a marker of immune system suppression.",
+            "subtag": "Immune System & Hematology"
+        },
+        {
+            "title": "Validation of Ambient Temperature RNA Stabilization Techniques for Spaceflight",
+            "summary": "Comparing the efficacy of novel chemical preservatives for maintaining RNA integrity in biological samples collected on the ISS without the need for cold stowage.",
+            "subtag": "Sample Processing & Preservation"
+        },
+        {
+            "title": "Gene Expression Changes in Salmonella Typhimurium in Response to Spaceflight",
+            "summary": "Transcriptomic analysis of Salmonella grown in orbit to identify virulence-associated genes that are differentially regulated by microgravity and space radiation.",
+            "subtag": "Pathogen Behavior & Virulence"
+        },
+        {
+            "title": "Mammalian Fertilization and Early Embryonic Development in Microgravity",
+            "summary": "An investigation using mouse gametes to determine the success rates of in-vitro fertilization and subsequent blastocyst formation in a spaceflight environment.",
+            "subtag": "Reproductive & Developmental Biology"
+        },
+        {
+            "title": "Heat Shock Protein Expression in Leaf Tissues of Mizuna Greens on the ISS",
+            "summary": "Examining the cellular stress response in Brassica rapa var. nipposinica by quantifying heat shock protein levels after exposure to the combined stressors of spaceflight.",
+            "subtag": "Stress Responses & Adaptation"
+        },
+        {
+            "title": "Synergistic Effects of Microgravity and Radiation on Endothelial Cell Function",
+            "summary": "An in-vitro study on human umbilical vein endothelial cells (HUVECs) to model the combined impact of spaceflight stressors on vascular health and cardiovascular disease risk.",
+            "subtag": "Combined Environmental Stressors"
+        },
+        {
+            "title": "A Comparative Study of Cardiac Deconditioning in Humans and Rodent Models in Space",
+            "summary": "Analyzing cardiac tissue and non-invasive human physiological data to compare the molecular and functional changes in the heart during spaceflight across different species.",
+            "subtag": "Comparative Physiology"
+        },
+        {
+            "title": "Nitrogen Uptake and Assimilation in Rice Roots Under Microgravity Conditions",
+            "summary": "Tracing the movement and metabolism of isotope-labeled nitrogen in Oryza sativa to understand how nutrient transport is altered in the absence of gravity-driven convection.",
+            "subtag": "Root Biology & Nutrient Transport"
+        }
+    ]
+}

@@ -3,6 +3,8 @@ import { generateSpeech } from "@src/services/voiceService";
 import { Server, Socket } from "socket.io";
 import { rm } from "fs/promises";
 import path from "path";
+import QuickLRU from "quick-lru";
+import { randomUUID } from "crypto";
 
 interface ChatMessage {
     message: string;
@@ -11,7 +13,13 @@ interface ChatMessage {
 }
 
 const MAX_CHAT_USERS = 5; // limit concurrent chatbot users
-const activeChatUsers = new Set<string>();
+const activeChatUsers = new Map<
+    string,
+    {
+        cachedMsgs: QuickLRU<any, string>;
+        persona?: string;
+    }
+>();
 
 /**
  * Setup all socket event handlers
@@ -28,7 +36,9 @@ export const setupSocketHandlers = (io: Server): void => {
                 timestamp: new Date().toISOString(),
             });
         } else {
-            activeChatUsers.add(socket.id);
+            activeChatUsers.set(socket.id, {
+                cachedMsgs: new QuickLRU({ maxSize: 5 }),
+            });
             console.log(`Chatbot slot assigned to ${socket.id}`);
 
             socket.emit("welcome", {
@@ -77,6 +87,15 @@ async function handleChatMessage(
             });
             return;
         }
+        const q = activeChatUsers.get(socket.id)?.cachedMsgs;
+        q!.set(randomUUID(), message);
+        activeChatUsers.set(socket.id, {
+            ...activeChatUsers.get(socket.id)!,
+            persona:
+                message.match(
+                    /\b(scientist|manager|mission architect)\b/i
+                )?.[0] ?? undefined,
+        });
         console.log(`Message from ${socket.id}: "${message}"`);
         console.log(process.cwd());
 
@@ -87,19 +106,21 @@ async function handleChatMessage(
         });
 
         // TODO: Replace with real LLM call
-        // const response = (await getLLMResponse(sessionId, message)).text;
+        // const response = (await getLLMResponse(sessionId, message, activeChatUsers.get(socket.id))).text;
         const response = { message: "s" };
+
+        const ttsPath = await generateSpeech(
+            sessionId,
+            Date.now().toString(),
+            response.message
+        );
 
         socket.emit("response", {
             message: sessionPaper
                 ? visAidInjector(sessionPaper, response.message)
-                : response,
+                : response.message,
             timestamp: new Date().toISOString(),
-            ttsPath: generateSpeech(
-                sessionId,
-                Date.now().toString(),
-                response.message
-            ),
+            ttsPath: ttsPath,
         });
 
         console.log(`Response sent to ${socket.id}`);
@@ -123,9 +144,17 @@ async function handleDisconnect(socket: Socket, reason: string): Promise<void> {
     console.log(`Client disconnected: ${socket.id}, Reason: ${reason}`);
     if (activeChatUsers.has(socket.id)) {
         activeChatUsers.delete(socket.id);
-        await rm(path.join(process.cwd(), `temp/${socket.id}`), {
-            recursive: true,
-        });
+        try {
+            await rm(path.join(process.cwd(), `temp/${socket.id}`), {
+                recursive: true,
+                force: true,
+            });
+        } catch (error) {
+            console.error(
+                `Error cleaning up temp directory for ${socket.id}:`,
+                error
+            );
+        }
         console.log(`Freed chatbot slot from ${socket.id}`);
     }
 }
