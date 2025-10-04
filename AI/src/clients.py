@@ -1,6 +1,6 @@
 from langchain_nvidia import ChatNVIDIA
 from langchain_cerebras import ChatCerebras
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langsmith import Client as LangSmithClient
 from functools import lru_cache
 
@@ -24,10 +24,9 @@ def get_main_llm() -> ChatNVIDIA :
 def get_router_llm() -> ChatCerebras:
 
     model = ChatCerebras(
-            model="qwen/qwen-3-32b",
-            model_provider="langchain-nvidia-ai-endpoints",
+            model="llama-3.3-70b",
             temperature = 0,
-            nvidia_api_key = CONFIG['CEREBRAS_API_KEY'],
+            api_key = CONFIG['CEREBRAS_API_KEY'],
     )
 
     return model
@@ -40,13 +39,13 @@ def get_langsmith_client() -> LangSmithClient:
     return LangSmithClient()
 
 @lru_cache(maxsize=None)
-def get_query_parser():
+def get_query_rewriter():
 
     try:
-        model = ChatGoogleGenerativeAI(
-            model="gemini/gemini-2.0-flash",
-            api_key=CONFIG['GEMINI_API_KEY'],
-            temperature=0
+        model = ChatGroq(
+            model="moonshotai/kimi-k2-instruct",
+            temperature = 0,
+            api_key = CONFIG['GROQ_API_KEY'],
         )
         return model
     except Exception as e:
