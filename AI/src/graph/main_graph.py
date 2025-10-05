@@ -15,6 +15,7 @@ class GraphState(TypedDict):
     agent_persona : str
     router_answer : str
     response : str
+    no_relevant_doc_response : str
     rewriter_response : str
     retrieved_docs : List[Dict[str, Any]]  # List of retrieved documents
     orch_response : str
@@ -116,7 +117,7 @@ class MainGraph():
         response = self.router_llm.invoke(prompt)
         logging.info(f"[GENERATE RESPONSE] Response generated: {response.content[:100]}...")
 
-        return {'response': response.content}
+        return {'no_relevant_doc_response': response.content}
 
 
     # post router conditional 
@@ -148,8 +149,8 @@ class MainGraph():
         logging.info("[GENERATE RESPONSE] Generating response for user...")
 
         prompt = "".join([
-            "You are a helpful AI assistant specializing in space biology and NASA research.\n",
-            "Respond to the user's query in a friendly and informative manner.\n\n",
+            "You are a helpful AI assistant specializing in space biology and NASA research in this field only.\n",
+            "Respond to the user's query in a friendly and informative manner and if applicable try to make it concise.\n\n",
             f"User Query: {state.get('user_prompt')}"
         ])
 
@@ -327,27 +328,11 @@ class MainGraph():
             docs = state.get('retrieved_docs')
 
             flat_values = [value for d in docs for value in d.values()]
-            prompt = f"Please Answer the User Query {user_query} according to this documents {flat_values}and make sure to follow the system prompt you got"
+            prompt = f"Please Answer this Question {user_query} according to this documents {flat_values} and make sure to follow the system instructions you got"
             response = agent.invoke(prompt)
 
             return {"final_result" : response}
 
-
-
-
-    @traceable(tags=["Run Graph"])
-    def run_graph(self , user_prompt):
-        "Execute the graph with the given user prompt"
-        logging.info(f"[RUN GRAPH] Starting graph execution with prompt: {user_prompt}")
-
-        initial_state = {"user_prompt" : user_prompt}
-
-        final_state = self.graph.invoke(initial_state)
-        
-        logging.info(f"[RUN GRAPH] Graph execution completed. Final state: {final_state}")
-        
-        # Return only the final_result or response field
-        return final_state.get('final_result')
 
 
     def _sys_prompt_for_router(self):
@@ -383,58 +368,32 @@ class MainGraph():
         ])
 
         return prompt
-
-
     
-    
-if __name__ == "__main__":
-    
-    # Configure logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
-    )
 
-    try : 
-        logging.info("=" * 50)
-        logging.info("Initializing MainGraph...")
-        gph = MainGraph()
-        logging.info("MainGraph initialized successfully!")
-        
-        prompt = "Hey is there any research paper talking about space microbiology ?"
-        logging.info("=" * 50)
-        result  =  gph.run_graph(prompt)
+    @traceable(tags=["Run Graph"])
+    def run_graph(self , user_prompt):
+        "Execute the graph with the given user prompt"
+        logging.info(f"[RUN GRAPH] Starting graph execution with prompt: {user_prompt}")
 
+        initial_state = {"user_prompt" : user_prompt}
 
+        final_state : GraphState = self.graph.invoke(initial_state)
         
-        logging.info("=" * 50)
-        logging.info("Graph execution completed successfully!")
+        logging.info(f"[RUN GRAPH] Graph execution completed. Final state: final_state.get('final_result')")
         
-        print(f"\n\n{'='*60}")
-        print(f"FINAL RESULTS")
-        print(f"{'='*60}")
-        print(f"\nRewritten Query: {result.get('rewriter_response')}")
-        print(f"\n{'='*60}")
-        print(f"RETRIEVED DOCUMENTS (Top 5):")
-        print(f"{'='*60}\n")
-        
-        retrieved_docs = result.get('retrieved_docs', [])
-        if retrieved_docs:
-            for doc in retrieved_docs:
-                print(f"Rank #{doc['rank']}:")
-                print(f"  📄 Paper: {doc['paper_title']}")
-                print(f"  📑 Section: {doc['section_title']}")
-                print(f"  🏷️  Topic: {doc['main_topic']} / {doc['sub_topic']}")
-                print(f"  🎯 Certainty: {doc['certainty']:.4f}" if doc['certainty'] else "  🎯 Certainty: N/A")
-                print(f"  📝 Content Preview: {doc['content'][:200]}...")
-                print(f"\n{'-'*60}\n")
-                print(result)
+        # Return only the final_result or response field
+
+        if final_state.get('final_result'):
+            result = final_state.get('final_result')
+            final_state['final_result'] = None
+            return result
+        elif final_state.get('no_relevant_doc_response'):
+            result = final_state.get('no_relevant_doc_response')
+            final_state['no_relevant_doc_response'] = None
+            return result
         else:
-            print("No documents retrieved.")
-
-    except Exception as e:
-
-        logging.error(f"Error happened: {type(e).__name__}: {str(e)}")
-        import traceback
-        traceback.print_exc()
+            result = final_state.get('response')
+            final_state['response'] = None
+            return result
+            
 
