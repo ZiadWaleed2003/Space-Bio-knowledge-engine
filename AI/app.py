@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Dict, Any
 import logging
 import uvicorn
+from pyngrok import ngrok
 
 from src.graph.main_graph import MainGraph
 
@@ -20,6 +21,16 @@ async def startup_event():
     global graph_instance
     try:
         graph_instance = MainGraph()
+        
+        # Start ngrok tunnel
+        port = 8000
+        public_url = ngrok.connect(port)
+        print("\n" + "="*60)
+        print(f"🚀 NASA Space Biology Knowledge Engine API is running!")
+        print(f"📡 Public URL: {public_url}")
+        print(f"🔗 Share this URL with your friend: {public_url}")
+        print("="*60 + "\n")
+        
     except Exception as e:
         print(f"Failed to initialize MainGraph: {str(e)}")
         raise

@@ -1,9 +1,11 @@
 from langgraph.graph import StateGraph , START , END
 from langsmith import traceable
 import logging
-from typing import Optional , TypedDict , List
+from typing import Optional , TypedDict , List, Dict, Any
 
 from src.clients import get_router_llm , get_langsmith_client , get_query_rewriter , get_main_llm
+from src.db.db_client import connect_to_local_vec_store
+from src.agents.base_agent import BaseAgent
 
 
 class GraphState(TypedDict):
@@ -13,6 +15,12 @@ class GraphState(TypedDict):
     agent_persona : str
     router_answer : str
     response : str
+    no_relevant_doc_response : str
+    rewriter_response : str
+    retrieved_docs : List[Dict[str, Any]]  # List of retrieved documents
+    orch_response : str
+    final_result : str
+
 
 
     # still figuring out the rest of the members of the state
@@ -25,6 +33,9 @@ class MainGraph():
         self.router_llm = get_router_llm()
         self.graph = self.build_graph()
         self.rewriter_llm = get_query_rewriter()
+        self.main_llm = get_main_llm()
+        self.weaviate_client = connect_to_local_vec_store()
+        self.collection_name = "ResearchPaperChunks"
         
         pass
 
@@ -41,7 +52,9 @@ class MainGraph():
         builder.add_node("generate_response_node" , self.generate_responses)
         builder.add_node("query_rewriter_node",self.query_rewriter_node)
         builder.add_node("retriever_node",self.retriever_node)
-
+        builder.add_node("generate_response2" , self.generate_response2)
+        builder.add_node("orch_node" , self.orch_node)
+        builder.add_node("agent_node" , self.agent_node)
 
         builder.add_conditional_edges("router_node",
                                       self.post_router_conditional_node,{
@@ -49,13 +62,21 @@ class MainGraph():
                                           False: "generate_response_node"
                                       })
         
-
+        builder.add_conditional_edges("retriever_node" , 
+                                      self.post_reranker_conditional_node,{
+                                          True : "orch_node",
+                                          False : "generate_response2"
+                                      })
+        
+        
         
         
         builder.add_edge(START , "router_node")
         builder.add_edge("query_rewriter_node" , "retriever_node")
-        builder.add_edge("retriever_node" , END) # tmp at end for now
+        builder.add_edge("orch_node" , "agent_node")
+        builder.add_edge("agent_node",END)
         builder.add_edge("generate_response_node",END)
+        builder.add_edge("generate_response2",END)
         
         # Compile and return the graph
         graph = builder.compile()
@@ -84,6 +105,20 @@ class MainGraph():
         
         logging.warning("[ROUTER NODE] No user prompt found, defaulting to CONTINUE_CONVERSATION")
         return {'router_answer' : "CONTINUE_CONVERSATION"}
+
+    def generate_response2(self , state : GraphState):
+
+        prompt = "".join([
+            "You are a helpful AI assistant specializing in space biology and NASA research.\n",
+            "Respond to the user's query in a friendly and informative manner.\n\n",
+            f"User Query: {state.get('user_prompt')} and apologize to the user and tell him that we searched the knowledge base for him but we couldn't find anything relative to the query he can try again or change the query"
+        ])
+
+        response = self.router_llm.invoke(prompt)
+        logging.info(f"[GENERATE RESPONSE] Response generated: {response.content[:100]}...")
+
+        return {'no_relevant_doc_response': response.content}
+
 
     # post router conditional 
     @traceable(tags=["Post Router Conditional"])
@@ -114,8 +149,8 @@ class MainGraph():
         logging.info("[GENERATE RESPONSE] Generating response for user...")
 
         prompt = "".join([
-            "You are a helpful AI assistant specializing in space biology and NASA research.\n",
-            "Respond to the user's query in a friendly and informative manner.\n\n",
+            "You are a helpful AI assistant specializing in space biology and NASA research in this field only.\n",
+            "Respond to the user's query in a friendly and informative manner and if applicable try to make it concise.\n\n",
             f"User Query: {state.get('user_prompt')}"
         ])
 
@@ -176,11 +211,53 @@ class MainGraph():
     @traceable(tags=["Retriever Node"])
     def retriever_node(self , state: GraphState):
         "a retriever node that should search the vec DB"
+        logging.info("[RETRIEVER NODE] Starting semantic search...")
 
-    # ReRanker Node
-    @traceable(tags=["ReRanker Node"])
-    def reranker_node(self , state : GraphState):
-        "a node to use the reranker tool"
+        if state.get('rewriter_response'):
+            query = state.get('rewriter_response')
+            logging.info(f"[RETRIEVER NODE] Searching with query: {query}")
+
+            try:
+                # Get the collection
+                collection = self.weaviate_client.collections.get(self.collection_name)
+                
+                # Perform semantic search using the named vector
+                response = collection.query.near_text(
+                    query=query,
+                    limit=5,  # Top 5 documents
+                    return_metadata=['distance', 'certainty'],
+                    target_vector="content_vector"  # Specify the named vector
+                )
+                
+                # Extract the results
+                retrieved_docs = []
+                for idx, obj in enumerate(response.objects):
+                    doc = {
+                        'rank': idx + 1,
+                        'content': obj.properties.get('content', ''),
+                        'paper_title': obj.properties.get('paper_title', ''),
+                        'main_topic': obj.properties.get('main_topic', ''),
+                        'sub_topic': obj.properties.get('sub_topic', ''),
+                        'section_title': obj.properties.get('section_title', ''),
+                        'distance': obj.metadata.distance if obj.metadata else None,
+                        'certainty': obj.metadata.certainty if obj.metadata else None
+                    }
+                    retrieved_docs.append(doc)
+                    logging.info(f"[RETRIEVER NODE] Doc {idx + 1}: {doc['paper_title'][:50]}... (certainty: {doc['certainty']})")
+                
+                logging.info(f"[RETRIEVER NODE] Successfully retrieved {len(retrieved_docs)} documents")
+                return {'retrieved_docs': retrieved_docs}
+                
+            except Exception as e:
+                logging.error(f"[RETRIEVER NODE] Error during retrieval: {str(e)}")
+                return {'retrieved_docs': []}
+
+
+
+    # # ReRanker Node
+    # @traceable(tags=["ReRanker Node"])
+    # def reranker_node(self , state : GraphState):
+    #     "a node to use the reranker tool"
 
 
     # post reranker conditional node
@@ -188,36 +265,74 @@ class MainGraph():
     def post_reranker_conditional_node(self , state: GraphState):
         "it should check if we got any returned relevant results or not then decide what to actually do"
 
+        if len(state.get('retrieved_docs')) > 0:
+            return True
+        else:
+            return False
+        
+
     # orch node
     @traceable(tags=["Orchestrator Node"])
     def orch_node(self , state:GraphState):
         "just some simple node taking the user query and determine the persona to decide which agent"
 
+        if state.get('user_prompt') :
+
+            prompt = "".join([
+                    "You are an intelligent router for a NASA AI assistant. Analyze the user's query and decide which expert is best suited to answer based the user query and persona.\n\n",
+                    "For scientific details, results, or methods, choose scientist.\n",
+                    "For high-level summaries, progress, or gaps, choose manager.\n",
+                    "For mission risks, safety, or actionable insights, choose mission_architect.\n",
+                    "For conversation, choose General.\n\n",
+                    "Your response must be a single word either a manager or a scientist or a mission_architect"
+                ])
+            
+            user_prompt = state.get('rewriter_response')
+            full_prompt = f"System prompt : {prompt} : user prompt : {user_prompt}"
+
+            response  = self.main_llm.invoke(full_prompt)
+            
+            # Determine agent_persona based on response
+            response_content = response.content.strip().lower()
+            if 'manager' in response_content:
+                agent_persona = 'manager'
+            elif 'scientist' in response_content:
+                agent_persona = 'scientist'
+            elif 'mission_architect' in response_content:
+                agent_persona = 'mission_architect'
+            else:
+                agent_persona = 'scientist'  # Default fallback
+
+            return {"orch_response" : response.content, "agent_persona": agent_persona}
+
+
     # post orch node
     @traceable(tags=["Post Orchestrator Conditional"])
     def post_orch_condition_agent(self , state : GraphState):
-
         "the conditional node"
+        # Note: This function is not currently used in the graph
+        # but keeping it for potential future conditional routing
+        if state.get('orch_response') == 'manager':
+            return "manager"
+        elif state.get('orch_response') == "scientist" :
+            return "scientist"
+        else:
+            return "mission_architect"
 
+    def agent_node(self , state : GraphState):
 
-    # Main Agent Node
-    @traceable(tags=["Main Agent Node"])
-    def main_agent_node(self , state : GraphState):
+        if state.get('agent_persona'):
+            agent_persona = state.get('agent_persona')
+            agent = BaseAgent(agent_persona)
+            user_query = state.get('rewriter_response')
+            docs = state.get('retrieved_docs')
 
-        "we should just create an instance with the right persona"
+            flat_values = [value for d in docs for value in d.values()]
+            prompt = f"Please Answer this Question {user_query} according to this documents {flat_values} and make sure to follow the system instructions you got"
+            response = agent.invoke(prompt)
 
+            return {"final_result" : response}
 
-    @traceable(tags=["Run Graph"])
-    def run_graph(self , user_prompt):
-        "Execute the graph with the given user prompt"
-        logging.info(f"[RUN GRAPH] Starting graph execution with prompt: {user_prompt}")
-
-        initial_state = {"user_prompt" : user_prompt}
-
-        final_state = self.graph.invoke(initial_state)
-        
-        logging.info(f"[RUN GRAPH] Graph execution completed. Final state: {final_state}")
-        return final_state
 
 
     def _sys_prompt_for_router(self):
@@ -253,35 +368,32 @@ class MainGraph():
         ])
 
         return prompt
-
-
     
-    
-if __name__ == "__main__":
-    
-    # Configure logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
-    )
 
-    try : 
-        logging.info("=" * 50)
-        logging.info("Initializing MainGraph...")
-        gph = MainGraph()
-        logging.info("MainGraph initialized successfully!")
+    @traceable(tags=["Run Graph"])
+    def run_graph(self , user_prompt):
+        "Execute the graph with the given user prompt"
+        logging.info(f"[RUN GRAPH] Starting graph execution with prompt: {user_prompt}")
+
+        initial_state = {"user_prompt" : user_prompt}
+
+        final_state : GraphState = self.graph.invoke(initial_state)
         
-        prompt = "Hey is there any research paper talking about space microbiology ?"
-        logging.info("=" * 50)
-        result = gph.run_graph(prompt)
+        logging.info(f"[RUN GRAPH] Graph execution completed. Final state: final_state.get('final_result')")
         
-        logging.info("=" * 50)
-        logging.info("Graph execution completed successfully!")
-        print(f"\n\nFinal Result: {result.get('rewriter_response')}")
+        # Return only the final_result or response field
 
-    except Exception as e:
-
-        logging.error(f"Error happened: {type(e).__name__}: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        if final_state.get('final_result'):
+            result = final_state.get('final_result')
+            final_state['final_result'] = None
+            return result
+        elif final_state.get('no_relevant_doc_response'):
+            result = final_state.get('no_relevant_doc_response')
+            final_state['no_relevant_doc_response'] = None
+            return result
+        else:
+            result = final_state.get('response')
+            final_state['response'] = None
+            return result
+            
 

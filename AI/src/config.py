@@ -9,7 +9,7 @@ def load_environment() -> Dict[str, str]:
     required_vars = {
         'CEREBRAS_API_KEY' : 'Cerebas Api key',
         'GROQ_API_KEY' : 'Groq API key',
-        'NVIDIA_API_KEY':'Nvidia NIM key',
+        'NVIDIA_APIKEY':'Nvidia NIM key',
         'GEMINI_API_KEY':'Gemini API key',
         'LANGSMITH_TRACING': 'LangSmith tracing flag',
         'LANGSMITH_API_KEY': 'LangSmith API key',
