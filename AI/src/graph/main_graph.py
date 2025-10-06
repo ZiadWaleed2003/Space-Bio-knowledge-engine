@@ -6,6 +6,7 @@ from typing import Optional , TypedDict , List, Dict, Any
 from src.clients import get_router_llm , get_langsmith_client , get_query_rewriter , get_main_llm
 from src.db.db_client import connect_to_local_vec_store
 from src.agents.base_agent import BaseAgent
+from src.reranker.reranker import rerank_documents 
 
 
 class GraphState(TypedDict):
@@ -17,7 +18,8 @@ class GraphState(TypedDict):
     response : str
     no_relevant_doc_response : str
     rewriter_response : str
-    retrieved_docs : List[Dict[str, Any]]  # List of retrieved documents
+    retrieved_docs : List[Dict[str, Any]]
+    reranked_docs : List[Dict[str, Any]]
     orch_response : str
     final_result : str
 
@@ -52,6 +54,7 @@ class MainGraph():
         builder.add_node("generate_response_node" , self.generate_responses)
         builder.add_node("query_rewriter_node",self.query_rewriter_node)
         builder.add_node("retriever_node",self.retriever_node)
+        builder.add_node("reranker_node",self.reranker_node)
         builder.add_node("generate_response2" , self.generate_response2)
         builder.add_node("orch_node" , self.orch_node)
         builder.add_node("agent_node" , self.agent_node)
@@ -62,7 +65,7 @@ class MainGraph():
                                           False: "generate_response_node"
                                       })
         
-        builder.add_conditional_edges("retriever_node" , 
+        builder.add_conditional_edges("reranker_node" , 
                                       self.post_reranker_conditional_node,{
                                           True : "orch_node",
                                           False : "generate_response2"
@@ -74,6 +77,7 @@ class MainGraph():
         builder.add_edge(START , "router_node")
         builder.add_edge("query_rewriter_node" , "retriever_node")
         builder.add_edge("orch_node" , "agent_node")
+        builder.add_edge("retriever_node" , "reranker_node")
         builder.add_edge("agent_node",END)
         builder.add_edge("generate_response_node",END)
         builder.add_edge("generate_response2",END)
@@ -224,7 +228,7 @@ class MainGraph():
                 # Perform semantic search using the named vector
                 response = collection.query.near_text(
                     query=query,
-                    limit=5,  # Top 5 documents
+                    limit=20,  # Top 20 documents
                     return_metadata=['distance', 'certainty'],
                     target_vector="content_vector"  # Specify the named vector
                 )
@@ -254,10 +258,19 @@ class MainGraph():
 
 
 
-    # # ReRanker Node
-    # @traceable(tags=["ReRanker Node"])
-    # def reranker_node(self , state : GraphState):
-    #     "a node to use the reranker tool"
+    # ReRanker Node
+    @traceable(tags=["ReRanker Node"])
+    def reranker_node(self , state : GraphState):
+        "a node to use the reranker tool"
+        logging.info("[ReRanker NODE] Starting Reranking documents ...")
+
+        if state.get('retrieved_docs',None):
+
+            docs = state.get('retrieved_docs')
+            query = state.get('rewriter_response')
+            reranked_docs = rerank_documents(query , retrieved_docs=docs , top_k= 5)
+
+            return {"reranked_docs":reranked_docs}
 
 
     # post reranker conditional node
@@ -265,7 +278,7 @@ class MainGraph():
     def post_reranker_conditional_node(self , state: GraphState):
         "it should check if we got any returned relevant results or not then decide what to actually do"
 
-        if len(state.get('retrieved_docs')) > 0:
+        if len(state.get('reranked_docs')) > 0:
             return True
         else:
             return False
@@ -325,11 +338,12 @@ class MainGraph():
             agent_persona = state.get('agent_persona')
             agent = BaseAgent(agent_persona)
             user_query = state.get('rewriter_response')
-            docs = state.get('retrieved_docs')
+            docs = state.get('reranked_docs')
 
             flat_values = [value for d in docs for value in d.values()]
             prompt = f"Please Answer this Question {user_query} according to this documents {flat_values} and make sure to follow the system instructions you got"
             response = agent.invoke(prompt)
+
 
             return {"final_result" : response}
 
