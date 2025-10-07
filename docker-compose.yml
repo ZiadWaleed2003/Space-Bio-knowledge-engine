@@ -1,6 +1,6 @@
 services:
   weaviate:
-    # Change this line to your local image version
+    
     image: semitechnologies/weaviate:1.33.0
     restart: on-failure:0
     ports:
@@ -14,6 +14,5 @@ services:
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
       ENABLE_MODULES: 'text2vec-nvidia'
-      # NVIDIA_APIKEY: '${NVIDIA_API_KEY}'
       DEFAULT_VECTORIZER_MODULE: 'text2vec-nvidia'
       CLUSTER_HOSTNAME: 'node1'

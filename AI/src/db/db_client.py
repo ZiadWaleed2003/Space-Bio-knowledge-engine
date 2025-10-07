@@ -1,12 +1,9 @@
-import os
 import weaviate
 from weaviate.classes.config import Configure, Property, DataType
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
-# --- Connect to your local Weaviate instance ---
 
 def connect_to_local_vec_store():
     try:
