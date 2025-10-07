@@ -1,5 +1,6 @@
 AI/.env
 AI/weaviate-data
 AI/src/data
-.vscode/
 __pycache__/
+config.bat
+node_modules

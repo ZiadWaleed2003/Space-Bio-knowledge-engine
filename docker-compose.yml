@@ -16,3 +16,17 @@ services:
       ENABLE_MODULES: 'text2vec-nvidia'
       DEFAULT_VECTORIZER_MODULE: 'text2vec-nvidia'
       CLUSTER_HOSTNAME: 'node1'
+
+  ai:
+    build:
+      context: ./AI
+      dockerfile: Dockerfile
+    image: nasa-ai:1.0
+    pull_policy: never
+    restart: on-failure:0
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./AI/.env
+    depends_on:
+      - weaviate
