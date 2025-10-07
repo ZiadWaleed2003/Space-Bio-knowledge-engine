@@ -3,10 +3,11 @@ from langsmith import traceable
 import logging
 from typing import Optional , TypedDict , List, Dict, Any
 
-from src.clients import get_router_llm , get_langsmith_client , get_query_rewriter , get_main_llm
+from src.clients import get_router_llm , get_query_rewriter , get_main_llm
 from src.db.db_client import connect_to_local_vec_store
 from src.agents.base_agent import BaseAgent
 from src.reranker.reranker import rerank_documents 
+from src.retrieval.retrieval import Retrieval
 
 
 class GraphState(TypedDict):
@@ -98,7 +99,7 @@ class MainGraph():
             prompt = "".join([
                 "System Prompt :",
                 f"{self._sys_prompt_for_router()}",
-                "user_prompt : ",
+                "\n**user_prompt** : ",
                 state.get('user_prompt')
             ])
 
@@ -222,39 +223,20 @@ class MainGraph():
             logging.info(f"[RETRIEVER NODE] Searching with query: {query}")
 
             try:
-                # Get the collection
-                collection = self.weaviate_client.collections.get(self.collection_name)
-                
-                # Perform semantic search using the named vector
-                response = collection.query.near_text(
-                    query=query,
-                    limit=20,  # Top 20 documents
-                    return_metadata=['distance', 'certainty'],
-                    target_vector="content_vector"  # Specify the named vector
-                )
-                
-                # Extract the results
-                retrieved_docs = []
-                for idx, obj in enumerate(response.objects):
-                    doc = {
-                        'rank': idx + 1,
-                        'content': obj.properties.get('content', ''),
-                        'paper_title': obj.properties.get('paper_title', ''),
-                        'main_topic': obj.properties.get('main_topic', ''),
-                        'sub_topic': obj.properties.get('sub_topic', ''),
-                        'section_title': obj.properties.get('section_title', ''),
-                        'distance': obj.metadata.distance if obj.metadata else None,
-                        'certainty': obj.metadata.certainty if obj.metadata else None
-                    }
-                    retrieved_docs.append(doc)
-                    logging.info(f"[RETRIEVER NODE] Doc {idx + 1}: {doc['paper_title'][:50]}... (certainty: {doc['certainty']})")
-                
-                logging.info(f"[RETRIEVER NODE] Successfully retrieved {len(retrieved_docs)} documents")
-                return {'retrieved_docs': retrieved_docs}
-                
+                retrieval = Retrieval()
+
+                docs = retrieval.retrieve_docs(query=query , top_k=20)
+
+                if docs:
+                    return {"retrieved_docs": docs}
+                else:
+                    logging.info("No relevant documents found for query")
+                    return {"retrieved_docs": []}
+        
             except Exception as e:
-                logging.error(f"[RETRIEVER NODE] Error during retrieval: {str(e)}")
-                return {'retrieved_docs': []}
+                logging.error(f"Error during document retrieval: {e}")
+                return {"retrieved_docs": []}
+           
 
 
 
