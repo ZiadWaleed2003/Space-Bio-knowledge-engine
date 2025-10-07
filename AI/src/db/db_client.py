@@ -1,14 +1,22 @@
 import weaviate
 from weaviate.classes.config import Configure, Property, DataType
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
 
 def connect_to_local_vec_store():
     try:
-        client = weaviate.connect_to_local()
-        print("✅ Successfully connected to Weaviate.")
+        # Use environment variable for Weaviate host, default to localhost for local dev
+        weaviate_host = os.getenv("WEAVIATE_HOST", "localhost")
+        weaviate_port = os.getenv("WEAVIATE_PORT", "8080")
+        
+        client = weaviate.connect_to_local(
+            host=weaviate_host,
+            port=int(weaviate_port)
+        )
+        print(f"✅ Successfully connected to Weaviate at {weaviate_host}:{weaviate_port}.")
         return client
     except Exception as e:
         print(f"❌ Failed to connect to Weaviate: {e}")
